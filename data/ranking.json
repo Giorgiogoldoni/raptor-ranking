@@ -1,12 +1,1 @@
-{
-  "meta": {
-    "updated": "",
-    "updated_it": "In attesa del primo calcolo...",
-    "total": 0,
-    "errors": 0,
-    "long": 0,
-    "early": 0,
-    "watch": 0
-  },
-  "data": []
-}
+{"meta":{"updated":"","updated_it":"In attesa del primo calcolo...","total":0,"errors":0,"long":0,"early":0,"watch":0},"data":[]}

@@ -1,0 +1,38 @@
+ame: 🦅 RAPTOR Ranking — Hourly Update
+
+on:
+  schedule:
+    # Ogni ora dalle 9 alle 19 (UTC+1 = 8-18 UTC) dal lunedì al venerdì
+    - cron: '5 8,9,10,11,12,13,14,15,16,17,18 * * 1-5'
+  workflow_dispatch:  # permette run manuale dal tab Actions
+
+jobs:
+  update-ranking:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install yfinance numpy --quiet
+
+      - name: Run ranking engine
+        run: |
+          cd $GITHUB_WORKSPACE
+          python scripts/fetch_ranking.py
+
+      - name: Commit & push ranking.json
+        run: |
+          git config user.name  "RSE DataBot"
+          git config user.email "bot@raptor-ranking"
+          git add data/ranking.json
+          git diff --cached --quiet || git commit -m "📊 Ranking update $(date -u +'%Y-%m-%d %H:%M') UTC"
+          git push

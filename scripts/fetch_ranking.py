@@ -273,6 +273,20 @@ TICKERS = [
 ]
 
 # ── INDICATORI ──────────────────────────────────────────────
+def safe_float(v):
+    """Converte a float, restituisce None se NaN/None/inf"""
+    try:
+        f = float(v)
+        if math.isnan(f) or math.isinf(f):
+            return None
+        return f
+    except:
+        return None
+
+def safe_val(v, default=0.0):
+    r = safe_float(v)
+    return r if r is not None else default
+
 def ema(series, n):
     k = 2/(n+1)
     out = [None]*len(series)
@@ -402,9 +416,13 @@ def process_ticker(info):
             return {'ticker': info['y'], 'display': info['t'], 'categoria': info['c'],
                     'nome': info['t'], 'error': 'Dati insufficienti'}
 
-        cs = [float(v) for v in hist['Close'].tolist()]
-        hs = [float(v) for v in hist['High'].tolist()]
-        ls = [float(v) for v in hist['Low'].tolist()]
+        cs = [safe_float(v) for v in hist['Close'].tolist()]
+        hs = [safe_float(v) for v in hist['High'].tolist()]
+        ls = [safe_float(v) for v in hist['Low'].tolist()]
+        valid = [v for v in cs if v is not None]
+        if len(valid) < 60:
+            return {'ticker': info['y'], 'display': info['t'], 'categoria': info['c'],
+                    'nome': info['t'], 'error': 'Dati insufficienti (NaN)'}
         dates = list(hist.index)
         n = len(cs)-1
 
@@ -421,9 +439,9 @@ def process_ticker(info):
 
         lc = cs[n]
         lk = kama[n]
-        lr = rsi_vals[n] or 0
-        ler = er_vals[n] or 0
-        lao = ao[n] or 0
+        lr = safe_val(rsi_vals[n], 50.0)
+        ler = safe_val(er_vals[n], 0.0)
+        lao = safe_val(ao[n], 0.0)
         lmm20 = mm20[n]
         lmm50 = mm50[n]
         ltc = tc[n]
@@ -462,6 +480,7 @@ def process_ticker(info):
         score = er_score + baff_score + pk_score + sett_score + mese_score + mm_bonus + ao_bonus + cross_bonus
         if stato == 'ROSSO':
             score *= 0.6
+        if not math.isfinite(score): score = 0.0
         score = max(0, round(score * 10) / 10)
 
         # Segnale
